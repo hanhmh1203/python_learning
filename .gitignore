@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
+.pytest_cache/
 *.so
 .Python
 env/
@@ -19,10 +20,11 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
-venv/
 
-# SQLite database files
-*.db
+# Virtual Environment
+venv/
+ENV/
+.env
 
 # IDE files
 .idea/
@@ -30,11 +32,10 @@ venv/
 *.swp
 *.swo
 
-# OS generated files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Specifically exclude the users.db file
+src/web_dev/fastapi_app/users.db
