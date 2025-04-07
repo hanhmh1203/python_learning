@@ -6,16 +6,32 @@
   <title>Quotes App</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  
+  <!-- 
+    Admin configuration is loaded from admin-config.json
+    For development, copy admin-config.sample.json to admin-config.json and update the credentials
+  -->
+  <script id="admin-config" type="application/json">
+    /* 
+      This section will be populated by the contents of admin-config.json 
+      which is excluded from Git
+    */
+  </script>
 </head>
 <body>
   <div class="container">
     <header>
       <h1>Inspirational Quotes</h1>
-      <div class="filter-container">
-        <label for="category-filter">Filter by category:</label>
-        <select id="category-filter">
-          <option value="">All Categories</option>
-        </select>
+      <div class="header-controls">
+        <div class="filter-container">
+          <label for="category-filter">Filter by category:</label>
+          <select id="category-filter">
+            <option value="">All Categories</option>
+          </select>
+        </div>
+        <button id="admin-login-btn" class="btn admin-btn">Admin Login</button>
+        <button id="admin-panel-btn" class="btn admin-btn hidden">Admin Panel</button>
+        <button id="logout-btn" class="btn logout-btn hidden">Logout</button>
       </div>
     </header>
 
@@ -43,6 +59,178 @@
     </div>
   </div>
 
+  <!-- Admin Login Modal -->
+  <div id="admin-login-modal" class="modal">
+    <div class="modal-content">
+      <span class="close admin-close">&times;</span>
+      <h2>Admin Login</h2>
+      <form id="admin-login-form">
+        <div class="form-group">
+          <label for="username">Username:</label>
+          <input type="text" id="username" name="username" required>
+        </div>
+        <div class="form-group">
+          <label for="password">Password:</label>
+          <input type="password" id="password" name="password" required>
+        </div>
+        <div class="form-group">
+          <button type="submit" class="btn submit-btn">Login</button>
+        </div>
+        <div id="login-error" class="error-message hidden"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Admin Panel Modal -->
+  <div id="admin-panel-modal" class="modal">
+    <div class="modal-content admin-panel-content">
+      <span class="close admin-panel-close">&times;</span>
+      <h2>Admin Panel</h2>
+      <div class="admin-tabs">
+        <button class="tab-btn active" data-tab="create-quote">Create Quote</button>
+        <button class="tab-btn" data-tab="import-quotes">Import Quotes</button>
+        <button class="tab-btn" data-tab="manage-quotes">Manage Quotes</button>
+      </div>
+      
+      <!-- Create Quote Tab -->
+      <div id="create-quote-tab" class="tab-content active">
+        <form id="create-quote-form">
+          <div class="form-group">
+            <label for="quote-text">Quote Text:</label>
+            <textarea id="quote-text" name="text" required></textarea>
+          </div>
+          <div class="form-group">
+            <label for="quote-author">Author:</label>
+            <input type="text" id="quote-author" name="author" required>
+          </div>
+          <div class="form-group">
+            <label for="quote-source">Source (optional):</label>
+            <input type="text" id="quote-source" name="source">
+          </div>
+          <div class="form-group">
+            <label for="quote-category">Category:</label>
+            <select id="quote-category" name="category" required>
+              <!-- Categories will be loaded dynamically -->
+            </select>
+            <div class="new-category-container">
+              <input type="checkbox" id="new-category-checkbox">
+              <label for="new-category-checkbox">Add new category</label>
+              <input type="text" id="new-category-input" class="hidden" placeholder="Enter new category">
+            </div>
+          </div>
+          <div class="form-group">
+            <button type="submit" class="btn submit-btn">Create Quote</button>
+          </div>
+          <div id="create-quote-message" class="message hidden"></div>
+        </form>
+      </div>
+      
+      <!-- Import Quotes Tab -->
+      <div id="import-quotes-tab" class="tab-content">
+        <div class="import-instructions">
+          <h3>Import Quotes from Excel</h3>
+          <p>Upload an Excel file (.xlsx) with quotes to import. The file should have columns for:</p>
+          <ul>
+            <li><strong>Text</strong> - The quote text</li>
+            <li><strong>Author</strong> - The author's name</li>
+            <li><strong>Source</strong> (optional) - The source of the quote</li>
+            <li><strong>Category</strong> - The category of the quote</li>
+          </ul>
+        </div>
+        
+        <form id="import-form" class="import-form">
+          <div class="form-group">
+            <label for="excel-file">Select Excel File:</label>
+            <input type="file" id="excel-file" accept=".xlsx" required>
+          </div>
+          <div class="form-group">
+            <button type="submit" class="btn submit-btn">Import</button>
+          </div>
+        </form>
+        
+        <div id="import-message" class="message hidden"></div>
+        
+        <div id="import-preview" class="import-preview hidden">
+          <h3>Preview and Edit Quotes</h3>
+          <p>Review and edit your quotes before submitting to the database:</p>
+          
+          <div class="table-actions">
+            <button id="add-row-btn" class="btn small-btn"><i class="fas fa-plus"></i> Add Row</button>
+            <button id="submit-all-btn" class="btn submit-btn">Submit All Quotes</button>
+          </div>
+          
+          <div class="table-container">
+            <table id="quotes-table">
+              <thead>
+                <tr>
+                  <th>Quote Text</th>
+                  <th>Author</th>
+                  <th>Source</th>
+                  <th>Category</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="quotes-table-body">
+                <!-- Quotes will be loaded here dynamically -->
+              </tbody>
+            </table>
+          </div>
+          
+          <div id="submit-result" class="message hidden"></div>
+        </div>
+      </div>
+      
+      <!-- Manage Quotes Tab -->
+      <div id="manage-quotes-tab" class="tab-content">
+        <div class="manage-quotes-header">
+          <h3>Manage All Quotes</h3>
+          <div class="refresh-container">
+            <button id="refresh-quotes-btn" class="btn small-btn"><i class="fas fa-sync-alt"></i> Refresh</button>
+          </div>
+        </div>
+        
+        <div class="table-container">
+          <table id="manage-quotes-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Quote Text</th>
+                <th>Author</th>
+                <th>Category</th>
+                <th>Source</th>
+                <th>Created At</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="manage-quotes-table-body">
+              <!-- Quotes will be loaded here dynamically -->
+            </tbody>
+          </table>
+        </div>
+        
+        <div id="manage-quotes-loading" class="loading-indicator hidden">
+          <p>Loading quotes...</p>
+        </div>
+        
+        <div id="manage-quotes-message" class="message hidden"></div>
+        
+        <!-- Confirmation Modal -->
+        <div id="delete-confirm-modal" class="modal">
+          <div class="modal-content confirmation-modal">
+            <h3>Confirm Deletion</h3>
+            <p>Are you sure you want to delete this quote? This action cannot be undone.</p>
+            <div class="confirmation-btns">
+              <button id="confirm-delete-btn" class="btn delete-btn">Yes, Delete</button>
+              <button id="cancel-delete-btn" class="btn cancel-btn">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SheetJS library for Excel parsing -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

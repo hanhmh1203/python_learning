@@ -39,3 +39,20 @@ ENV/
 
 # Specifically exclude the users.db file
 src/web_dev/fastapi_app/users.db
+
+# Node modules and build files
+node_modules/
+dist/
+build/
+
+# Environment variables and secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+config.json
+
+# Admin credentials in HTML file
+# We'll create a separate sample file for public use
+src/web_dev/quotes_frontend/admin-config.json
