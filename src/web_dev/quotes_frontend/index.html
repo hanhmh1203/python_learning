@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quotes App</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Inspirational Quotes</h1>
+      <div class="filter-container">
+        <label for="category-filter">Filter by category:</label>
+        <select id="category-filter">
+          <option value="">All Categories</option>
+        </select>
+      </div>
+    </header>
+
+    <main>
+      <div class="quotes-container" id="quotes-container">
+        <!-- Quotes will be loaded here dynamically -->
+        <div class="loading">
+          <p>Loading quotes...</p>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <p>&copy; 2025 Quotes App</p>
+    </footer>
+  </div>
+
+  <!-- Quote Detail Modal -->
+  <div id="quote-modal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <div id="quote-detail">
+        <!-- Quote details will be loaded here dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

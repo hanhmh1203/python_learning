@@ -11,6 +11,8 @@ import sqlite3
 from typing import List, Optional, Dict
 import uvicorn
 from datetime import datetime
+import os
+from fastapi.middleware.cors import CORSMiddleware
 
 # Initialize FastAPI application
 app = FastAPI(
@@ -19,8 +21,23 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Add CORS middleware to allow cross-origin requests
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins (you may want to restrict this in production)
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all methods
+    allow_headers=["*"],  # Allow all headers
+)
+
 # Database setup and helper functions
-DB_PATH = 'quotes.db'
+# Check if running in Fly.io environment and use the mounted volume
+if os.path.exists('/app/data'):
+    DB_PATH = '/app/data/quotes.db'
+    print(f"Using database at {DB_PATH}")
+else:
+    DB_PATH = 'quotes.db'
+    print(f"Using local database at {DB_PATH}")
 
 def get_db_connection():
     """Create a connection to the SQLite database."""
@@ -30,6 +47,10 @@ def get_db_connection():
 
 def init_db():
     """Initialize the database with the necessary tables if they don't exist."""
+    # Create data directory if it doesn't exist and we're in Fly.io environment
+    if os.path.exists('/app') and not os.path.exists('/app/data'):
+        os.makedirs('/app/data', exist_ok=True)
+        
     conn = get_db_connection()
     cursor = conn.cursor()
     
@@ -139,6 +160,48 @@ async def create_quote(quote: QuoteCreate):
         conn.close()
         
         return new_quote
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+
+# Create multiple quotes at once (BATCH CREATE)
+@app.post("/api/quotes/batch", response_model=List[Quote], status_code=status.HTTP_201_CREATED)
+async def create_quotes_batch(quotes: List[QuoteCreate]):
+    """
+    Create multiple quotes at once with the provided details.
+    
+    - **quotes**: Required - A list of quotes to create
+    
+    Each quote in the list requires:
+    - **text**: Required - The quote text
+    - **author**: Required - The author of the quote
+    - **source**: Optional - Source of the quote (book, speech, etc.)
+    - **category**: Optional - Category or theme of the quote
+    """
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        created_quotes = []
+        
+        for quote in quotes:
+            cursor.execute(
+                "INSERT INTO quotes (text, author, source, category) VALUES (?, ?, ?, ?)",
+                (quote.text, quote.author, quote.source, quote.category)
+            )
+            
+            # Get the newly created quote
+            quote_id = cursor.lastrowid
+            cursor.execute("SELECT * FROM quotes WHERE id = ?", (quote_id,))
+            new_quote = dict(cursor.fetchone())
+            new_quote["is_favorite"] = False  # New quote is not a favorite by default
+            created_quotes.append(new_quote)
+        
+        conn.commit()
+        conn.close()
+        
+        return created_quotes
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

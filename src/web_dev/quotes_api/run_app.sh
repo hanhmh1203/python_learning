@@ -14,6 +14,10 @@ pip install fastapi uvicorn pydantic email-validator
 
 echo "Starting Quotes API application..."
 cd "$SCRIPT_DIR"
-python app.py
+
+# Run FastAPI app with uvicorn
+# The $PORT environment variable is set by Fly.io
+PORT="${PORT:-8000}"
+uvicorn app:app --host 0.0.0.0 --port $PORT
 
 # This script will deactivate the virtual environment automatically when it exits
