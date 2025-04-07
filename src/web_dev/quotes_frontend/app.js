@@ -6,47 +6,36 @@ const API_ENDPOINTS = {
   quotesByCategory: '/api/quotes/category/',
   favorite: '/api/quotes/{id}/favorite',
   unfavorite: '/api/quotes/{id}/favorite',
-  createQuote: '/api/quotes', // New endpoint for quote creation
-  deleteQuote: '/api/quotes/{id}', // New endpoint for quote deletion
+  createQuote: '/api/quotes', 
+  deleteQuote: '/api/quotes/{id}',
 };
 
-// Load admin credentials from config file or use defaults for development
+// Default admin credentials (will be overridden by config file if available)
 let ADMIN_CREDENTIALS = {
-  username: 'admin', // Default placeholder username
-  password: 'password' // Default placeholder password
+  username: 'admin',
+  password: 'password'
 };
 
-// Try to load actual credentials from config if it exists
-try {
-  const configScript = document.getElementById('admin-config');
-  if (configScript && configScript.textContent) {
-    const configData = JSON.parse(configScript.textContent);
-    if (configData.adminCredentials) {
-      ADMIN_CREDENTIALS = configData.adminCredentials;
-    }
-  } else {
-    // Attempt to load from external config file
-    fetch('admin-config.json')
-      .then(response => {
-        if (!response.ok) {
-          console.warn('Admin config file not found. Using default credentials.');
-          return null;
-        }
-        return response.json();
-      })
-      .then(data => {
-        if (data && data.adminCredentials) {
-          ADMIN_CREDENTIALS = data.adminCredentials;
-          console.log('Admin credentials loaded from external file');
-        }
-      })
-      .catch(error => {
-        console.error('Error loading admin config:', error);
-      });
-  }
-} catch (e) {
-  console.error('Error parsing admin config:', e);
-}
+// Try to load actual credentials from config file
+document.addEventListener('DOMContentLoaded', () => {
+  fetch('admin-config.json')
+    .then(response => {
+      if (!response.ok) {
+        console.warn('Admin config file not found. Using default credentials.');
+        return null;
+      }
+      return response.json();
+    })
+    .then(data => {
+      if (data && data.adminCredentials) {
+        ADMIN_CREDENTIALS = data.adminCredentials;
+        console.log('Admin credentials loaded from config file');
+      }
+    })
+    .catch(error => {
+      console.error('Error loading admin config:', error);
+    });
+});
 
 // Generate a simple user ID for favorites functionality
 const USER_ID = localStorage.getItem('quotes_user_id') || generateUserId();

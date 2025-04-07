@@ -1,0 +1,6 @@
+# Admin credentials file with real credentials
+admin-config.json
+
+# Other files to ignore
+.DS_Store
+node_modules/
